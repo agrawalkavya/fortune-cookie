@@ -257,18 +257,23 @@
 </head>
 <body>
   <div class="container">
-    <h1>picky eater?</h1>
-    <!-- Step 1: Number of People -->
+    <img src="logo.png" alt="Delhi Eats Logo" style="position:absolute;top:24px;left:24px;width:120px;height:auto;z-index:10;">
+    <!-- Step 1: Number of People (Car & Pegs) -->
     <div class="step active" id="step-people">
-      <h2>how many people are there?</h2>
-      <div class="stick-figures" id="stick-figures">
-        <span class="stick-figure" draggable="true" data-id="1">o<br>|<br>/\<br>/ \</span>
-        <span class="stick-figure" draggable="true" data-id="2">o<br>|<br>/|<br>/ \</span>
-        <span class="stick-figure" draggable="true" data-id="3">o<br>|<br>/|\<br>/</span>
-        <span class="stick-figure" draggable="true" data-id="4">o<br>|<br>/|\<br>/ \</span>
-        <span class="stick-figure" draggable="true" data-id="5">o<br>|<br>/|\<br>/ \</span>
+      <h2 style="text-align:center;margin-top:60px;">how many people are there?</h2>
+      <div id="car-peg-area" style="position:relative;height:220px;margin-bottom:24px;">
+        <img id="car-img" src="car-empty.png" alt="Car" style="position:absolute;left:-400px;top:40px;width:340px;height:auto;transition:left 1.2s cubic-bezier(.77,0,.18,1);z-index:2;">
+        <div id="peg-dropzone" style="position:absolute;left:50%;top:0;transform:translateX(-50%);width:340px;height:120px;z-index:3;"></div>
       </div>
-      <div class="stick-dropzone" id="stick-dropzone">Drop here</div>
+      <div id="peg-row" style="display:flex;justify-content:center;gap:18px;margin-bottom:18px;">
+        <img src="peg.png" class="peg-img" draggable="true" data-peg="0" style="width:38px;height:38px;cursor:grab;">
+        <img src="peg.png" class="peg-img" draggable="true" data-peg="1" style="width:38px;height:38px;cursor:grab;">
+        <img src="peg.png" class="peg-img" draggable="true" data-peg="2" style="width:38px;height:38px;cursor:grab;">
+        <img src="peg.png" class="peg-img" draggable="true" data-peg="3" style="width:38px;height:38px;cursor:grab;">
+        <img src="peg.png" class="peg-img" draggable="true" data-peg="4" style="width:38px;height:38px;cursor:grab;">
+        <img src="peg.png" class="peg-img" draggable="true" data-peg="5" style="width:38px;height:38px;cursor:grab;">
+      </div>
+      <div id="peg-message" style="text-align:center;font-size:18px;height:28px;margin-bottom:18px;color:#222;font-family:monospace;"></div>
       <button id="next-people" style="margin:24px auto 0 auto;display:block;" disabled>Next</button>
     </div>
     <!-- Step 2: Budget -->
@@ -373,61 +378,72 @@
       {id: 15, restaurant_id: 5, name: 'Brownie', category: 'Dessert', price: 100}
     ];
 
-    // --- Step 1: Stick Figures ---
-    let selectedPeople = 0;
-    const stickFigures = document.querySelectorAll('.stick-figure');
-    const stickDropzone = document.getElementById('stick-dropzone');
+    // --- Step 1: Car & Pegs ---
+    const carImg = document.getElementById('car-img');
+    const pegDropzone = document.getElementById('peg-dropzone');
+    const pegRow = document.getElementById('peg-row');
+    const pegImgs = document.querySelectorAll('.peg-img');
+    const pegMessage = document.getElementById('peg-message');
     const nextPeopleBtn = document.getElementById('next-people');
-    let droppedFigures = [];
-    function updateStickDropzone() {
-      // Remove all children
-      while (stickDropzone.firstChild) stickDropzone.removeChild(stickDropzone.firstChild);
-      // Add dropped figures
-      droppedFigures.forEach(fid => {
-        const f = document.querySelector('.stick-figure[data-id="' + fid + '"]');
-        if (f) stickDropzone.appendChild(f);
-      });
-      selectedPeople = droppedFigures.length;
-      if (selectedPeople > 0) {
-        nextPeopleBtn.disabled = false;
-      } else {
-        nextPeopleBtn.disabled = true;
-        stickDropzone.textContent = 'Drop here';
-      }
+    let pegsOnCar = [];
+    const pegMessages = [
+      'Ready for a solo ride!',
+      'Room for more!',
+      'Looking like a party!',
+      'Almost full!',
+      'One more can join!',
+      'Full house!'
+    ];
+    function updateCarImg() {
+      const pegCount = pegsOnCar.length;
+      carImg.src = `car-${pegCount === 0 ? 'empty' : pegCount + 'peg' + (pegCount > 1 ? 's' : '')}.png`;
     }
-    stickFigures.forEach(fig => {
-      fig.addEventListener('dragstart', e => {
-        fig.classList.add('dragged');
-        e.dataTransfer.setData('text/plain', fig.dataset.id);
-      });
-      fig.addEventListener('dragend', e => {
-        fig.classList.remove('dragged');
+    function updatePegMessage() {
+      pegMessage.textContent = pegsOnCar.length > 0 ? pegMessages[pegsOnCar.length - 1] : '';
+    }
+    function updateNextBtn() {
+      nextPeopleBtn.disabled = pegsOnCar.length === 0;
+    }
+    pegImgs.forEach(peg => {
+      peg.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', peg.dataset.peg);
       });
     });
-    stickDropzone.addEventListener('dragover', e => {
+    pegDropzone.addEventListener('dragover', e => e.preventDefault());
+    pegDropzone.addEventListener('drop', e => {
       e.preventDefault();
-    });
-    stickDropzone.addEventListener('drop', e => {
-      e.preventDefault();
-      const id = e.dataTransfer.getData('text/plain');
-      if (!droppedFigures.includes(id)) {
-        droppedFigures.push(id);
-        updateStickDropzone();
+      const pegIdx = e.dataTransfer.getData('text/plain');
+      if (!pegsOnCar.includes(pegIdx) && pegsOnCar.length < 6) {
+        pegsOnCar.push(pegIdx);
+        document.querySelector(`.peg-img[data-peg="${pegIdx}"]`).style.visibility = 'hidden';
+        updateCarImg();
+        updatePegMessage();
+        updateNextBtn();
       }
     });
-    // Allow removing stick figures by clicking them in the dropzone
-    stickDropzone.addEventListener('click', e => {
-      if (e.target.classList.contains('stick-figure')) {
-        const id = e.target.dataset.id;
-        droppedFigures = droppedFigures.filter(fid => fid !== id);
-        // Move back to original stick-figures row
-        document.getElementById('stick-figures').appendChild(e.target);
-        updateStickDropzone();
+    // Allow removing pegs by clicking on the car
+    pegDropzone.addEventListener('click', e => {
+      if (pegsOnCar.length > 0) {
+        // Remove the last peg
+        const removed = pegsOnCar.pop();
+        document.querySelector(`.peg-img[data-peg="${removed}"]`).style.visibility = 'visible';
+        updateCarImg();
+        updatePegMessage();
+        updateNextBtn();
       }
     });
-    updateStickDropzone();
+    updateCarImg();
+    updatePegMessage();
+    updateNextBtn();
+    // Animate car in on load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        carImg.style.left = '50%';
+        carImg.style.transform = 'translateX(-50%)';
+      }, 300);
+    });
     nextPeopleBtn.addEventListener('click', () => {
-      if (selectedPeople > 0) {
+      if (pegsOnCar.length > 0) {
         document.getElementById('step-people').classList.remove('active');
         document.getElementById('step-budget').classList.add('active');
       }
@@ -562,7 +578,7 @@
     function generateReceipt() {
       // Calculate total budget
       const perPerson = 150 + notesInWallet * 50;
-      const totalBudget = perPerson * selectedPeople;
+      const totalBudget = perPerson * pegsOnCar.length;
       // Find matching restaurants
       let filtered = restaurants.filter(r =>
         (!selectedRegion || r.area.toLowerCase() === selectedRegion) &&

@@ -768,7 +768,7 @@
         </div>
         <div class="tray"></div>
       </div>
-      <button id="confirm-cuisine" class="primary-btn">Confirm</button>
+      <button id="confirm-cuisine" class="primary-btn" style="margin-top: 140px;">Confirm</button>
     </div>
     <!-- Step 5: Fortune Cookie Button -->
     <div class="step" id="step-fortune">
@@ -1108,7 +1108,8 @@
     nextCuisineBtn.style.display = 'none'; // Hide old next button
     confirmCuisineBtn.addEventListener('click', () => {
       document.getElementById('step-vending').classList.remove('active');
-      document.getElementById('step-fortune').classList.add('active');
+      generateReceipt();
+      document.getElementById('receipt-container').classList.add('active');
     });
 
     // --- Step 5: Fortune Cookie Button ---

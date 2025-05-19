@@ -965,95 +965,66 @@
 
     // --- Step 4: Vending Machine ---
     let selectedCuisine = '';
-    const vendingMachine = document.querySelector('.vending-machine');
-    const tray = document.getElementById('tray');
     const nextCuisineBtn = document.getElementById('next-cuisine');
+    const canSlots = document.querySelectorAll('.custom-vending-machine .can-slot');
+    const tray = document.querySelector('.custom-vending-machine .tray');
     const cuisineList = [
-      { name: 'Italian', img: 'images/italian.png' },
-      { name: 'Chinese', img: 'images/chinese.png' },
-      { name: 'North Indian', img: 'images/northindian.png' },
-      { name: 'South Indian', img: 'images/southindian.png' },
-      { name: 'Pan Asian', img: 'images/panasian.png' },
-      { name: 'Random', img: 'images/random1.png' }
+      { name: 'italian', img: 'images/italian.png' },
+      { name: 'chinese', img: 'images/chinese.png' },
+      { name: 'north indian', img: 'images/northindian.png' },
+      { name: 'south indian', img: 'images/southindian.png' },
+      { name: 'pan asian', img: 'images/panasian.png' }
     ];
-    // Build classic vending machine layout
-    if (!document.querySelector('.vending-cans-classic')) {
-      const cansClassic = document.createElement('div');
-      cansClassic.className = 'vending-cans-classic';
-      const row1 = document.createElement('div');
-      row1.className = 'vending-cans-row';
-      const row2 = document.createElement('div');
-      row2.className = 'vending-cans-row';
-      for (let i = 0; i < 3; i++) {
-        const can = document.createElement('div');
-        can.className = 'can';
-        can.dataset.type = 'static';
-        can.dataset.cuisine = cuisineList[i].name;
-        can.dataset.img = cuisineList[i].img;
-        can.innerHTML = `<img src="${cuisineList[i].img}" alt="${cuisineList[i].name}">`;
-        row1.appendChild(can);
-      }
-      for (let i = 3; i < 6; i++) {
-        const can = document.createElement('div');
-        can.className = 'can';
-        can.dataset.type = i === 5 ? 'random' : 'static';
-        can.dataset.cuisine = cuisineList[i].name;
-        can.dataset.img = cuisineList[i].img;
-        can.innerHTML = `<img src="${cuisineList[i].img}" alt="${cuisineList[i].name}">`;
-        row2.appendChild(can);
-      }
-      cansClassic.appendChild(row1);
-      cansClassic.appendChild(row2);
-      vendingMachine.innerHTML = '';
-      // Add shelves
-      const shelves = document.createElement('div');
-      shelves.className = 'vending-shelves';
-      shelves.innerHTML = `<div class='shelf shelf1'></div><div class='shelf shelf2'></div>`;
-      vendingMachine.appendChild(shelves);
-      vendingMachine.appendChild(cansClassic);
-      vendingMachine.appendChild(tray);
-      // Add can click logic
-      cansClassic.querySelectorAll('.can').forEach(can => {
-        can.addEventListener('click', () => {
-          if (can.classList.contains('falling') || can.classList.contains('rotated') || can.classList.contains('pop-anim')) return;
-          can.classList.add('rotated');
-          setTimeout(() => {
-            can.classList.remove('rotated');
-            can.classList.add('falling');
-            setTimeout(() => {
-              can.classList.remove('falling');
-              tray.innerHTML = '';
-              const popCan = can.cloneNode(true);
-              popCan.classList.remove('falling');
-              popCan.classList.add('pop-anim');
-              tray.appendChild(popCan);
-              // After pop, show cuisine receipt
-              setTimeout(() => {
-                let cuisineName = can.dataset.cuisine;
-                if (can.dataset.type === 'static') {
-                  selectedCuisine = cuisineName;
-                } else {
-                  // Random: pick one of the other five
-                  const randomIdx = Math.floor(Math.random() * 5);
-                  selectedCuisine = cuisineList[randomIdx].name;
-                  popCan.querySelector('img').src = cuisineList[randomIdx].img;
-                  cuisineName = cuisineList[randomIdx].name;
-                }
-                // Show cuisine receipt
-                const cuisineReceipt = document.createElement('div');
-                cuisineReceipt.className = 'cuisine-receipt';
-                cuisineReceipt.innerHTML = `
-                  <div class="cuisine-msg">let us help<br>you out...</div>
-                  <img src="image-cuisine/${cuisineName.toLowerCase().replace(/ /g,'_')}.png" alt="${cuisineName}">
-                `;
-                popCan.appendChild(cuisineReceipt);
-                nextCuisineBtn.disabled = false;
-              }, 1100);
-            }, 1000);
-          }, 600);
-        });
+    canSlots.forEach((slot, idx) => {
+      const canImg = slot.querySelector('.can-img');
+      canImg.style.cursor = 'pointer';
+      canImg.addEventListener('click', () => {
+        // Remove animation and selection from all cans
+        document.querySelectorAll('.can-img').forEach(img => img.classList.remove('can-pop', 'selected'));
+        // Animate clicked can
+        canImg.classList.add('can-pop', 'selected');
+        // Tray logic
+        tray.innerHTML = '';
+        const trayCan = document.createElement('img');
+        trayCan.className = 'can-img can-pop';
+        // If random, pick a random cuisine (not random itself)
+        let cuisineName = canImg.alt.toLowerCase();
+        if (cuisineName === 'random') {
+          const randomIdx = Math.floor(Math.random() * cuisineList.length);
+          cuisineName = cuisineList[randomIdx].name;
+          trayCan.src = cuisineList[randomIdx].img;
+          trayCan.alt = cuisineList[randomIdx].name;
+        } else {
+          trayCan.src = canImg.src;
+          trayCan.alt = canImg.alt;
+        }
+        selectedCuisine = cuisineName;
+        tray.appendChild(trayCan);
+        nextCuisineBtn.disabled = false;
       });
+    });
+    // Add pop animation style if not already present
+    if (!document.getElementById('can-pop-style')) {
+      const style = document.createElement('style');
+      style.id = 'can-pop-style';
+      style.innerHTML = `
+        .can-pop {
+          animation: canPopAnim 0.5s cubic-bezier(.77,0,.18,1);
+          z-index: 10;
+        }
+        .can-img.selected {
+          outline: 3px solid #3953c6;
+          border-radius: 8px;
+        }
+        @keyframes canPopAnim {
+          0% { transform: scale(1); }
+          60% { transform: scale(1.18); }
+          100% { transform: scale(1); }
+        }
+      `;
+      document.head.appendChild(style);
     }
+    nextCuisineBtn.disabled = true;
     nextCuisineBtn.addEventListener('click', () => {
       if (selectedCuisine) {
         document.getElementById('step-vending').classList.remove('active');
@@ -1121,48 +1092,6 @@
       receiptsHTML += '</div>';
       document.getElementById('receipt').innerHTML = receiptsHTML;
     }
-
-    // --- Step 4: Vending Machine ---
-    const canSlots = document.querySelectorAll('.custom-vending-machine .can-slot');
-    canSlots.forEach(slot => {
-      const canImg = slot.querySelector('.can-img');
-      canImg.addEventListener('click', () => {
-        // Remove animation from all cans
-        document.querySelectorAll('.can-img').forEach(img => {
-          img.classList.remove('can-pop');
-        });
-        // Animate clicked can
-        canImg.classList.add('can-pop');
-        // Set selected cuisine from image alt (or src if you prefer)
-        let cuisineName = canImg.alt;
-        // If you want to use the filename instead:
-        // let cuisineName = canImg.src.split('/').pop().split('.')[0];
-        selectedCuisine = cuisineName;
-        nextCuisineBtn.disabled = false;
-      });
-    });
-    // Add pop animation style
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .can-pop {
-        animation: canPopAnim 0.5s cubic-bezier(.77,0,.18,1);
-        z-index: 10;
-      }
-      @keyframes canPopAnim {
-        0% { transform: scale(1); }
-        60% { transform: scale(1.18); }
-        100% { transform: scale(1); }
-      }
-    `;
-    document.head.appendChild(style);
-    // Enable/disable Next button
-    nextCuisineBtn.disabled = true;
-    nextCuisineBtn.addEventListener('click', () => {
-      if (selectedCuisine) {
-        document.getElementById('step-vending').classList.remove('active');
-        document.getElementById('step-fortune').classList.add('active');
-      }
-    });
   </script>
 </body>
 </html>

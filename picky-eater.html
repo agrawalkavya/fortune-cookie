@@ -610,6 +610,73 @@
       60% { transform: scale(1.18); }
       100% { transform: scale(1); }
     }
+    .location-tag {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+      user-select: none;
+      transition: box-shadow 0.2s, border 0.2s;
+    }
+    .location-tag .tag-label {
+      color: #4285f4;
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+      font-family: 'Arial', sans-serif;
+    }
+    .location-tag .tag-box {
+      border: 3px solid #4285f4;
+      border-radius: 8px;
+      padding: 6px 18px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(66,133,244,0.08);
+      font-family: 'Arial', sans-serif;
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: #222;
+    }
+    .location-tag .tag-box:before, .location-tag .tag-box:after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 3px solid #4285f4;
+      background: #fff;
+      border-radius: 50%;
+    }
+    .location-tag .tag-box:before {
+      left: -18px;
+      top: -18px;
+    }
+    .location-tag .tag-box:after {
+      right: -18px;
+      top: -18px;
+    }
+    .location-tag.selected .tag-box {
+      border-color: #0b57d0;
+      box-shadow: 0 4px 16px rgba(66,133,244,0.18);
+      background: #e3f0ff;
+    }
+    .location-tag.selected .tag-label {
+      color: #0b57d0;
+    }
+    #confirm-location {
+      background: #4285f4;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(66,133,244,0.13);
+      transition: background 0.2s;
+    }
+    #confirm-location:disabled {
+      background: #bcd6fa;
+      color: #fff;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -647,27 +714,13 @@
       <div style="text-align:center;font-size:1.4rem;">Current budget: ₹<span id="budget-amount">150</span> per person</div>
       <button id="next-budget" style="margin:32px auto 0 auto;display:block;font-size:1.2rem;padding:8px 24px;">Next</button>
     </div>
-    <!-- Step 3: Map -->
-    <div class="step" id="step-map">
-      <h2>where in delhi?</h2>
-      <div class="map-area">
-        <pre style="font-size:13px;line-height:1.1;margin-bottom:8px;">   _______
-  /       \
- / North   \
-|           |
-| West  C  East |
-|           |
- \ South   /
-  \_______/</pre>
-        <div>
-          <span class="map-region" data-region="north">North</span>
-          <span class="map-region" data-region="south">South</span>
-          <span class="map-region" data-region="east">East</span>
-          <span class="map-region" data-region="west">West</span>
-          <span class="map-region" data-region="central">Central</span>
-        </div>
+    <!-- Step 3: Location Tags -->
+    <div class="step" id="step-location">
+      <h2 style="text-align:center;margin-top:40px;">where are you?</h2>
+      <div id="location-tags-area" style="position:relative;width:100%;height:480px;min-height:320px;margin:0 auto 32px auto;">
+        <!-- Tags will be injected here -->
       </div>
-      <button id="next-map" style="margin:24px auto 0 auto;display:block;" disabled>Next</button>
+      <button id="confirm-location" style="display:block;margin:0 auto 0 auto;font-size:1.2rem;padding:10px 32px;">Confirm</button>
     </div>
     <!-- Step 4: Vending Machine -->
     <div class="step" id="step-vending">
@@ -863,29 +916,52 @@
     });
     document.getElementById('next-budget').addEventListener('click', () => {
       document.getElementById('step-budget').classList.remove('active');
-      document.getElementById('step-map').classList.add('active');
+      document.getElementById('step-location').classList.add('active');
     });
 
-    // --- Step 3: Map ---
-    /*
-    let selectedRegion = '';
-    document.querySelectorAll('.map-region').forEach(region => {
-      region.addEventListener('click', () => {
-        document.querySelectorAll('.map-region').forEach(r => r.classList.remove('selected'));
-        region.classList.add('selected');
-        selectedRegion = region.dataset.region;
-        document.getElementById('next-map').disabled = false;
+    // --- Step 3: Location Tags ---
+    // Get unique locations from foods database
+    const locationTags = Array.from(new Set(foods.map(f => f.location)));
+    let selectedLocationTag = '';
+    const locationTagsArea = document.getElementById('location-tags-area');
+    function scatterTags() {
+      locationTagsArea.innerHTML = '';
+      const areaW = locationTagsArea.offsetWidth || 700;
+      const areaH = locationTagsArea.offsetHeight || 480;
+      locationTags.forEach((tag, i) => {
+        const tagDiv = document.createElement('div');
+        tagDiv.className = 'location-tag';
+        tagDiv.innerHTML = `<div class="tag-label">where am i</div><div class="tag-box"><span class="tag-text">${tag}</span></div>`;
+        // Random scatter (avoid edges)
+        const left = Math.random() * (areaW - 180) + 40;
+        const top = Math.random() * (areaH - 60) + 20;
+        tagDiv.style.left = left + 'px';
+        tagDiv.style.top = top + 'px';
+        tagDiv.style.position = 'absolute';
+        tagDiv.style.cursor = 'pointer';
+        tagDiv.addEventListener('click', () => {
+          if (tagDiv.classList.contains('selected')) {
+            tagDiv.classList.remove('selected');
+            selectedLocationTag = '';
+          } else if (!selectedLocationTag) {
+            // Only allow one selected
+            document.querySelectorAll('.location-tag').forEach(t => t.classList.remove('selected'));
+            tagDiv.classList.add('selected');
+            selectedLocationTag = tag;
+          }
+        });
+        locationTagsArea.appendChild(tagDiv);
       });
-    });
-    document.getElementById('next-map').addEventListener('click', () => {
-      if (selectedRegion) {
-        document.getElementById('step-map').classList.remove('active');
+    }
+    window.addEventListener('DOMContentLoaded', scatterTags);
+    window.addEventListener('resize', scatterTags);
+    const confirmLocationBtn = document.getElementById('confirm-location');
+    confirmLocationBtn.addEventListener('click', () => {
+      if (selectedLocationTag) {
+        document.getElementById('step-location').classList.remove('active');
         document.getElementById('step-vending').classList.add('active');
       }
     });
-    */
-    // --- New Foods Database ---
-    // ... (add the rest of the CSV content here, formatted as above)
 
     // --- Step 4: Vending Machine ---
     let selectedCuisine = '';
@@ -997,15 +1073,20 @@
       // Calculate per-person budget
       const perPerson = 150 + notesInWallet * 50;
       const numPeople = pegsOnCar.length;
-      // Find matching restaurants
-      // Instead of filtering by region, just pick a random restaurant
-      const uniqueRestaurants = Array.from(new Set(foods.map(f => f.restaurant + '|' + f.location)));
+      // Filter foods by selected location and selected cuisine
+      const filteredFoods = foods.filter(f =>
+        (!selectedLocationTag || f.location === selectedLocationTag) &&
+        (!selectedCuisine || f.cuisine.toLowerCase().includes(selectedCuisine.toLowerCase()))
+      );
+      // Find matching restaurants in the selected location
+      const uniqueRestaurants = Array.from(new Set(filteredFoods.map(f => f.restaurant + '|' + f.location)));
+      let layoutClass = `receipts-${numPeople}`;
       let receiptsHTML = `<div class="receipt-grid ${layoutClass}">`;
       for (let i = 0; i < numPeople; i++) {
         // Pick a random restaurant
         const [restaurant, location] = uniqueRestaurants[Math.floor(Math.random() * uniqueRestaurants.length)].split('|');
         // Get food items for this restaurant
-        let items = foods.filter(f => f.restaurant === restaurant && f.location === location);
+        let items = filteredFoods.filter(f => f.restaurant === restaurant && f.location === location);
         // Shuffle items for randomness
         items = items.sort(() => 0.5 - Math.random());
         let selected = [];

@@ -713,11 +713,19 @@
       color: #fff;
       border-color: #4285f4;
     }
+    .site-logo {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      width: 120px;
+      height: auto;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
+  <img src="images/logo.png" alt="Delhi Eats Logo" class="site-logo">
   <div class="container">
-    <img src="logo.png" alt="Delhi Eats Logo" style="position:absolute;top:24px;left:24px;width:120px;height:auto;z-index:10;">
     <!-- Step 1: Number of People (Car & Pegs) -->
     <div class="step active" id="step-people">
       <h2 style="text-align:center;margin-top:60px;">how many people are there?</h2>
@@ -1114,7 +1122,8 @@
     nextCuisineBtn.style.display = 'none'; // Hide old next button
     confirmCuisineBtn.addEventListener('click', () => {
       document.getElementById('step-vending').classList.remove('active');
-      document.getElementById('step-fortune').classList.add('active');
+      generateReceipt();
+      document.getElementById('receipt-container').classList.add('active');
     });
 
     // --- Step 5: Fortune Cookie Button ---

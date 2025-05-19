@@ -1114,17 +1114,23 @@
           0% { transform: scale(1); }
           60% { transform: scale(1.18); }
           100% { transform: scale(1); }
-        }
+        } 
       `;
       document.head.appendChild(style);
     }
     confirmCuisineBtn.disabled = true;
     nextCuisineBtn.style.display = 'none'; // Hide old next button
+
     confirmCuisineBtn.addEventListener('click', () => {
-      document.getElementById('step-vending').classList.remove('active');
-      generateReceipt();
-      document.getElementById('receipt-container').classList.add('active');
-    });
+  if (!selectedCuisine) {
+    alert('Please select a can before confirming!');
+    return;
+  }
+
+  document.getElementById('step-vending').classList.remove('active');
+  document.getElementById('step-fortune').classList.add('active');
+});
+
 
     // --- Step 5: Fortune Cookie Button ---
     document.getElementById('fortune-btn').addEventListener('click', () => {

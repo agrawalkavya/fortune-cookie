@@ -528,6 +528,88 @@
       grid-template-rows: 1fr 1fr;
       gap: 32px;
     }
+    .custom-vending-machine {
+      width: 420px;
+      margin: 0 auto;
+      border: 16px solid #3953c6;
+      background: #3953c6;
+      border-radius: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+    }
+    .custom-vending-machine .shelf {
+      width: 360px;
+      height: 110px;
+      background: #f7f7b7;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 18px auto 0 auto;
+      border: none;
+      border-radius: 0;
+    }
+    .custom-vending-machine .shelf-top {
+      margin-top: 32px;
+    }
+    .custom-vending-machine .shelf-bottom {
+      margin-bottom: 0;
+    }
+    .custom-vending-machine .can-slot {
+      width: 80px;
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .custom-vending-machine .can-img {
+      width: 64px;
+      height: 90px;
+      object-fit: contain;
+      background: none;
+    }
+    .custom-vending-machine .tray {
+      width: 360px;
+      height: 110px;
+      background: #fff;
+      margin: 18px auto 32px auto;
+      border: none;
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 600px) {
+      .custom-vending-machine {
+        width: 98vw;
+        border-width: 8px;
+      }
+      .custom-vending-machine .shelf,
+      .custom-vending-machine .tray {
+        width: 90vw;
+        min-width: 0;
+        max-width: 100vw;
+      }
+      .custom-vending-machine .can-slot {
+        width: 18vw;
+        height: 18vw;
+      }
+      .custom-vending-machine .can-img {
+        width: 12vw;
+        height: 16vw;
+      }
+    }
+    .can-pop {
+      animation: canPopAnim 0.5s cubic-bezier(.77,0,.18,1);
+      z-index: 10;
+    }
+    @keyframes canPopAnim {
+      0% { transform: scale(1); }
+      60% { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -589,32 +671,21 @@
     </div>
     <!-- Step 4: Vending Machine -->
     <div class="step" id="step-vending">
-      <h2>vending machine</h2>
-      <div class="vending-machine" style="margin:0 auto;">
-        <!-- Row 1 cans -->
-        <div class="can" data-type="static" data-cuisine="Italian" data-img="images/italian.png" style="top:21.5px; left:20px;">
-          <img src="images/italian.png" alt="Italian">
+      <h2 style="text-align:center;margin-bottom:24px;color:#fff;font-family:monospace;font-size:1.5rem;">have a fizz!</h2>
+      <div class="custom-vending-machine">
+        <div class="shelf shelf-top">
+          <div class="can-slot"><img src="images/italian.png" class="can-img" alt="can"></div>
+          <div class="can-slot"><img src="images/chinese.png" class="can-img" alt="can"></div>
+          <div class="can-slot"><img src="images/northindian.png" class="can-img" alt="can"></div>
         </div>
-        <div class="can" data-type="static" data-cuisine="Chinese" data-img="images/chinese.png" style="top:21.5px; left:112.75px;">
-          <img src="images/chinese.png" alt="Chinese">
+        <div class="shelf shelf-bottom">
+          <div class="can-slot"><img src="images/southindian.png" class="can-img" alt="can"></div>
+          <div class="can-slot"><img src="images/panasian.png" class="can-img" alt="can"></div>
+          <div class="can-slot"><img src="images/random1.png" class="can-img" alt="can"></div>
         </div>
-        <div class="can" data-type="static" data-cuisine="North Indian" data-img="images/northindian.png" style="top:21.5px; left:205.5px;">
-          <img src="images/northindian.png" alt="North Indian">
-        </div>
-        <!-- Row 2 cans -->
-        <div class="can" data-type="static" data-cuisine="South Indian" data-img="images/southindian.png" style="top:155px; left:20px;">
-          <img src="images/southindian.png" alt="South Indian">
-        </div>
-        <div class="can" data-type="static" data-cuisine="Pan Asian" data-img="images/panasian.png" style="top:155px; left:112.75px;">
-          <img src="images/panasian.png" alt="Pan Asian">
-        </div>
-        <div class="can" data-type="random" style="top:155px; left:205.5px;">
-          <img src="images/random1.png" alt="Random">
-        </div>
-        <!-- Tray -->
-        <div class="tray" id="tray"></div>
+        <div class="tray"></div>
       </div>
-      <button id="next-cuisine" style="margin:24px auto 0 auto;display:block;" disabled>Next</button>
+      <button id="next-cuisine" style="margin:24px auto 0 auto;display:block;">Next</button>
     </div>
     <!-- Step 5: Fortune Cookie Button -->
     <div class="step" id="step-fortune">
@@ -969,6 +1040,48 @@
       receiptsHTML += '</div>';
       document.getElementById('receipt').innerHTML = receiptsHTML;
     }
+
+    // --- Step 4: Vending Machine ---
+    const canSlots = document.querySelectorAll('.custom-vending-machine .can-slot');
+    canSlots.forEach(slot => {
+      const canImg = slot.querySelector('.can-img');
+      canImg.addEventListener('click', () => {
+        // Remove animation from all cans
+        document.querySelectorAll('.can-img').forEach(img => {
+          img.classList.remove('can-pop');
+        });
+        // Animate clicked can
+        canImg.classList.add('can-pop');
+        // Set selected cuisine from image alt (or src if you prefer)
+        let cuisineName = canImg.alt;
+        // If you want to use the filename instead:
+        // let cuisineName = canImg.src.split('/').pop().split('.')[0];
+        selectedCuisine = cuisineName;
+        nextCuisineBtn.disabled = false;
+      });
+    });
+    // Add pop animation style
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .can-pop {
+        animation: canPopAnim 0.5s cubic-bezier(.77,0,.18,1);
+        z-index: 10;
+      }
+      @keyframes canPopAnim {
+        0% { transform: scale(1); }
+        60% { transform: scale(1.18); }
+        100% { transform: scale(1); }
+      }
+    `;
+    document.head.appendChild(style);
+    // Enable/disable Next button
+    nextCuisineBtn.disabled = true;
+    nextCuisineBtn.addEventListener('click', () => {
+      if (selectedCuisine) {
+        document.getElementById('step-vending').classList.remove('active');
+        document.getElementById('step-fortune').classList.add('active');
+      }
+    });
   </script>
 </body>
 </html>

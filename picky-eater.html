@@ -539,6 +539,7 @@
       flex-direction: column;
       align-items: center;
       padding: 0;
+      position: relative;
     }
     .custom-vending-machine .shelf {
       width: 360px;
@@ -571,15 +572,20 @@
       background: none;
     }
     .custom-vending-machine .tray {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -110px;
+      margin: 0 auto;
       width: 360px;
       height: 110px;
       background: #fff;
-      margin: 18px auto 32px auto;
       border: none;
       border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 2;
     }
     @media (max-width: 600px) {
       .custom-vending-machine {
@@ -599,6 +605,11 @@
       .custom-vending-machine .can-img {
         width: 12vw;
         height: 16vw;
+      }
+      .custom-vending-machine .tray {
+        width: 90vw;
+        height: 18vw;
+        bottom: -18vw;
       }
     }
     .can-pop {
@@ -727,14 +738,14 @@
       <h2 style="text-align:center;margin-bottom:24px;color:#fff;font-family:monospace;font-size:1.5rem;">have a fizz!</h2>
       <div class="custom-vending-machine">
         <div class="shelf shelf-top">
-          <div class="can-slot"><img src="images/italian.png" class="can-img" alt="can"></div>
-          <div class="can-slot"><img src="images/chinese.png" class="can-img" alt="can"></div>
-          <div class="can-slot"><img src="images/northindian.png" class="can-img" alt="can"></div>
+          <div class="can-slot"><img src="images/italian.png" class="can-img" alt="italian"></div>
+          <div class="can-slot"><img src="images/chinese.png" class="can-img" alt="chinese"></div>
+          <div class="can-slot"><img src="images/american.png" class="can-img" alt="american"></div>
         </div>
         <div class="shelf shelf-bottom">
-          <div class="can-slot"><img src="images/southindian.png" class="can-img" alt="can"></div>
-          <div class="can-slot"><img src="images/panasian.png" class="can-img" alt="can"></div>
-          <div class="can-slot"><img src="images/random1.png" class="can-img" alt="can"></div>
+          <div class="can-slot"><img src="images/indian.png" class="can-img" alt="indian"></div>
+          <div class="can-slot"><img src="images/mexican.png" class="can-img" alt="mexican"></div>
+          <div class="can-slot"><img src="images/random.png" class="can-img" alt="random"></div>
         </div>
         <div class="tray"></div>
       </div>
@@ -952,6 +963,26 @@
         });
         locationTagsArea.appendChild(tagDiv);
       });
+      // Add the randomise tag above the confirm button
+      const randomTagDiv = document.createElement('div');
+      randomTagDiv.className = 'location-tag';
+      randomTagDiv.style.position = 'static';
+      randomTagDiv.style.margin = '0 auto 24px auto';
+      randomTagDiv.innerHTML = `<div class="tag-label">or...</div><div class="tag-box"><span class="tag-text">randomise it for me</span></div>`;
+      randomTagDiv.style.cursor = 'pointer';
+      randomTagDiv.addEventListener('click', () => {
+        if (randomTagDiv.classList.contains('selected')) {
+          randomTagDiv.classList.remove('selected');
+          selectedLocationTag = '';
+        } else if (!selectedLocationTag) {
+          document.querySelectorAll('.location-tag').forEach(t => t.classList.remove('selected'));
+          randomTagDiv.classList.add('selected');
+          // Pick a random location
+          const randomLoc = locationTags[Math.floor(Math.random() * locationTags.length)];
+          selectedLocationTag = randomLoc;
+        }
+      });
+      locationTagsArea.appendChild(randomTagDiv);
     }
     window.addEventListener('DOMContentLoaded', scatterTags);
     window.addEventListener('resize', scatterTags);
@@ -971,9 +1002,9 @@
     const cuisineList = [
       { name: 'italian', img: 'images/italian.png' },
       { name: 'chinese', img: 'images/chinese.png' },
-      { name: 'north indian', img: 'images/northindian.png' },
-      { name: 'south indian', img: 'images/southindian.png' },
-      { name: 'pan asian', img: 'images/panasian.png' }
+      { name: 'american', img: 'images/american.png' },
+      { name: 'indian', img: 'images/indian.png' },
+      { name: 'mexican', img: 'images/mexican.png' }
     ];
     canSlots.forEach((slot, idx) => {
       const canImg = slot.querySelector('.can-img');
@@ -1045,19 +1076,26 @@
       const perPerson = 150 + notesInWallet * 50;
       const numPeople = pegsOnCar.length;
       // Filter foods by selected location and selected cuisine
-      const filteredFoods = foods.filter(f =>
-        (!selectedLocationTag || f.location === selectedLocationTag) &&
-        (!selectedCuisine || f.cuisine.toLowerCase().includes(selectedCuisine.toLowerCase()))
+      let filteredFoods = foods.filter(f =>
+        (!selectedLocationTag || f.location === selectedLocationTag)
       );
-      // Find matching restaurants in the selected location
-      const uniqueRestaurants = Array.from(new Set(filteredFoods.map(f => f.restaurant + '|' + f.location)));
+      // Try to filter by cuisine as well
+      let cuisineFilteredFoods = filteredFoods.filter(f =>
+        !selectedCuisine || f.cuisine.toLowerCase().includes(selectedCuisine.toLowerCase())
+      );
+      // If no foods match the cuisine in this location, ignore cuisine and just use location
+      if (cuisineFilteredFoods.length === 0) {
+        cuisineFilteredFoods = filteredFoods;
+      }
+      // Find matching restaurants in the selected location (and cuisine if available)
+      const uniqueRestaurants = Array.from(new Set(cuisineFilteredFoods.map(f => f.restaurant + '|' + f.location)));
       let layoutClass = `receipts-${numPeople}`;
       let receiptsHTML = `<div class="receipt-grid ${layoutClass}">`;
       for (let i = 0; i < numPeople; i++) {
         // Pick a random restaurant
         const [restaurant, location] = uniqueRestaurants[Math.floor(Math.random() * uniqueRestaurants.length)].split('|');
         // Get food items for this restaurant
-        let items = filteredFoods.filter(f => f.restaurant === restaurant && f.location === location);
+        let items = cuisineFilteredFoods.filter(f => f.restaurant === restaurant && f.location === location);
         // Shuffle items for randomness
         items = items.sort(() => 0.5 - Math.random());
         let selected = [];

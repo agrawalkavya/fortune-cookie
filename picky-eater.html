@@ -689,23 +689,29 @@
       cursor: not-allowed;
     }
     .primary-btn {
-      background: #4285f4;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
+      background: #fff;
+      color: #4285f4;
+      border: 3px solid #4285f4;
+      border-radius: 16px;
       font-weight: bold;
       font-size: 1.2rem;
-      padding: 10px 32px;
+      padding: 14px 40px;
       box-shadow: 0 2px 8px rgba(66,133,244,0.13);
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
       cursor: pointer;
       display: block;
       margin: 32px auto 0 auto;
     }
     .primary-btn:disabled {
-      background: #bcd6fa;
-      color: #fff;
+      background: #f0f6ff;
+      color: #bcd6fa;
+      border-color: #bcd6fa;
       cursor: not-allowed;
+    }
+    .primary-btn:hover:not(:disabled) {
+      background: #4285f4;
+      color: #fff;
+      border-color: #4285f4;
     }
   </style>
 </head>

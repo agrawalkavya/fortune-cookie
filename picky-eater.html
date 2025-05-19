@@ -649,7 +649,8 @@
       font-size: 1.5rem;
       color: #222;
     }
-    .location-tag .tag-box:before, .location-tag .tag-box:after {
+    .location-tag .tag-box:before, .location-tag .tag-box:after,
+    .location-tag .tag-box .dot-bl, .location-tag .tag-box .dot-br {
       content: '';
       position: absolute;
       width: 12px;
@@ -658,14 +659,10 @@
       background: #fff;
       border-radius: 50%;
     }
-    .location-tag .tag-box:before {
-      left: -18px;
-      top: -18px;
-    }
-    .location-tag .tag-box:after {
-      right: -18px;
-      top: -18px;
-    }
+    .location-tag .tag-box:before { left: -18px; top: -18px; }
+    .location-tag .tag-box:after { right: -18px; top: -18px; }
+    .location-tag .tag-box .dot-bl { left: -18px; bottom: -18px; }
+    .location-tag .tag-box .dot-br { right: -18px; bottom: -18px; }
     .location-tag.selected .tag-box {
       border-color: #0b57d0;
       box-shadow: 0 4px 16px rgba(66,133,244,0.18);
@@ -749,7 +746,7 @@
         </div>
         <div class="tray"></div>
       </div>
-      <button id="next-cuisine" style="margin:24px auto 0 auto;display:block;">Next</button>
+      <button id="confirm-cuisine" style="display:block;margin:32px auto 0 auto;font-size:1.2rem;padding:10px 32px;">Confirm</button>
     </div>
     <!-- Step 5: Fortune Cookie Button -->
     <div class="step" id="step-fortune">
@@ -962,6 +959,13 @@
           }
         });
         locationTagsArea.appendChild(tagDiv);
+        const tagBox = tagDiv.querySelector('.tag-box');
+        const dotBL = document.createElement('span');
+        dotBL.className = 'dot-bl';
+        tagBox.appendChild(dotBL);
+        const dotBR = document.createElement('span');
+        dotBR.className = 'dot-br';
+        tagBox.appendChild(dotBR);
       });
       // Add the randomise tag above the confirm button
       const randomTagDiv = document.createElement('div');
@@ -996,7 +1000,7 @@
 
     // --- Step 4: Vending Machine ---
     let selectedCuisine = '';
-    const nextCuisineBtn = document.getElementById('next-cuisine');
+    const nextCuisineBtn = document.getElementById('confirm-cuisine');
     const canSlots = document.querySelectorAll('.custom-vending-machine .can-slot');
     const tray = document.querySelector('.custom-vending-machine .tray');
     const cuisineList = [
@@ -1031,7 +1035,7 @@
         }
         selectedCuisine = cuisineName;
         tray.appendChild(trayCan);
-        nextCuisineBtn.disabled = false;
+        confirmCuisineBtn.disabled = false;
       });
     });
     // Add pop animation style if not already present
@@ -1055,8 +1059,9 @@
       `;
       document.head.appendChild(style);
     }
-    nextCuisineBtn.disabled = true;
-    nextCuisineBtn.addEventListener('click', () => {
+    confirmCuisineBtn.disabled = true;
+    nextCuisineBtn.style.display = 'none'; // Hide old next button
+    confirmCuisineBtn.addEventListener('click', () => {
       if (selectedCuisine) {
         document.getElementById('step-vending').classList.remove('active');
         document.getElementById('step-fortune').classList.add('active');

@@ -1059,7 +1059,7 @@
 
     // --- Step 4: Vending Machine ---
     let selectedCuisine = '';
-    const nextCuisineBtn = document.getElementById('confirm-cuisine');
+    const confirmCuisineBtn = document.getElementById('confirm-cuisine');
     const canSlots = document.querySelectorAll('.custom-vending-machine .can-slot');
     const tray = document.querySelector('.custom-vending-machine .tray');
     const cuisineList = [
@@ -1121,14 +1121,19 @@
     confirmCuisineBtn.disabled = true;
     nextCuisineBtn.style.display = 'none'; // Hide old next button
 
-    confirmCuisineBtn.addEventListener('click', () => {
+    confirmCuisineBtn.addEventListener('click', function() {
       if (!selectedCuisine) {
         alert('Please select a can before confirming!');
         return;
       }
-      // Transition to next step
-      document.getElementById('step-vending').classList.remove('active');
-      document.getElementById('step-fortune').classList.add('active');
+      
+      // Hide vending machine step
+      const vendingStep = document.getElementById('step-vending');
+      vendingStep.classList.remove('active');
+      
+      // Show fortune cookie step
+      const fortuneStep = document.getElementById('step-fortune');
+      fortuneStep.classList.add('active');
     });
 
     // --- Step 5: Fortune Cookie Button ---
